@@ -51,6 +51,7 @@ import com.example.cachecleaner.domain.model.AppInfo
 import com.example.cachecleaner.domain.model.CleaningStatus
 import com.example.cachecleaner.ui.components.AppIcon
 import com.example.cachecleaner.ui.components.AppTopBar
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -144,9 +145,9 @@ fun AppDetailScreen(
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = MaterialTheme.shapes.large,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                         )
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
@@ -166,7 +167,7 @@ fun AppDetailScreen(
                             StorageRow(label = "Cache", bytes = app.storageInfo?.cacheBytes, isHighlighted = true)
 
                             Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                            HorizontalDivider()
                             Spacer(modifier = Modifier.height(12.dp))
 
                             StorageRow(
@@ -184,7 +185,8 @@ fun AppDetailScreen(
                                 val engine = cleanerRepository.getEngine(accessMode)
                                 val result = cleanerRepository.cleanAndVerify(engine, packageName)
 
-                                // Refresh details
+                                // Allow filesystem sync and OS quota updates to settle
+                                delay(300)
                                 appInfo = appRepository.getAppDetails(packageName)
                                 isCleaning = false
 
@@ -203,12 +205,8 @@ fun AppDetailScreen(
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !isCleaning,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        shape = ButtonDefaults.shape,
+                        enabled = !isCleaning
                     ) {
                         if (isCleaning) {
                             CircularProgressIndicator(

@@ -1,16 +1,13 @@
 package com.example.cachecleaner.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,15 +16,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.cachecleaner.core.utils.FileSizeFormatter
 import com.example.cachecleaner.domain.model.AppInfo
+import com.example.cachecleaner.domain.model.StorageInfo
+import com.example.cachecleaner.ui.theme.CacheCleanerTheme
 
 @Composable
 fun AppListItem(
     app: AppInfo,
-    isSelected: Boolean,
-    onToggleSelect: (Boolean) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -65,29 +63,39 @@ fun AppListItem(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        val totalBytes = app.storageInfo?.totalBytes ?: 0L
+        Surface(
+            shape = MaterialTheme.shapes.small,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
-            val cacheBytes = app.storageInfo?.cacheBytes ?: 0L
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = if (cacheBytes > 0) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                Text(
-                    text = FileSizeFormatter.format(cacheBytes),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (cacheBytes > 0) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
-
-            Checkbox(
-                checked = isSelected,
-                onCheckedChange = onToggleSelect,
-                modifier = Modifier.size(24.dp)
+            Text(
+                text = FileSizeFormatter.format(totalBytes),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
         }
+    }
+}
+
+@Preview(name = "App List Item - Light", showBackground = true)
+@Preview(name = "App List Item - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AppListItemPreview() {
+    CacheCleanerTheme(dynamicColor = false) {
+        AppListItem(
+            app = AppInfo(
+                packageName = "com.example.sampleapp",
+                appName = "Sample Application",
+                isSystemApp = false,
+                storageInfo = StorageInfo(
+                    appBytes = 1024L * 1024L * 120L,
+                    dataBytes = 1024L * 1024L * 45L,
+                    cacheBytes = 1024L * 1024L * 85L
+                )
+            ),
+            onClick = {}
+        )
     }
 }

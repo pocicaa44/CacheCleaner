@@ -26,6 +26,12 @@ data class CleaningResult(
     val errorMessage: String? = null
 )
 
+data class CacheCleanedEvent(
+    val packages: Set<String> = emptySet(),
+    val freedBytes: Long = 0L,
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 enum class CleaningStatus {
     SUCCESS,
     FAILED,
@@ -50,8 +56,8 @@ enum class AccessStatus {
 }
 
 enum class SortOption {
-    CACHE_DESC,
-    CACHE_ASC,
+    SIZE_DESC,
+    SIZE_ASC,
     NAME_ASC,
     NAME_DESC
 }

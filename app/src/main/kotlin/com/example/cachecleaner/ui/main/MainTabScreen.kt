@@ -54,7 +54,12 @@ fun MainTabScreen(
                 )
                 NavigationBarItem(
                     selected = currentTab == MainTab.APPS,
-                    onClick = { selectedTabOrdinal = MainTab.APPS.ordinal },
+                    onClick = {
+                        if (selectedTabOrdinal != MainTab.APPS.ordinal) {
+                            selectedTabOrdinal = MainTab.APPS.ordinal
+                            appsViewModel.refreshApps()
+                        }
+                    },
                     icon = { Icon(imageVector = Icons.Default.Apps, contentDescription = "Apps") },
                     label = { Text("Apps") },
                     alwaysShowLabel = true
@@ -78,7 +83,10 @@ fun MainTabScreen(
             when (currentTab) {
                 MainTab.HOME -> HomeScreen(
                     viewModel = homeViewModel,
-                    onNavigateToApps = { selectedTabOrdinal = MainTab.APPS.ordinal }
+                    onNavigateToApps = {
+                        selectedTabOrdinal = MainTab.APPS.ordinal
+                        appsViewModel.refreshApps()
+                    }
                 )
                 MainTab.APPS -> AppsScreen(
                     viewModel = appsViewModel,

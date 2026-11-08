@@ -12,6 +12,8 @@ import com.example.cachecleaner.data.storage.StorageStatsRepository
 import com.example.cachecleaner.domain.model.AccessMode
 import com.example.cachecleaner.domain.model.AccessStatus
 import com.example.cachecleaner.domain.model.CleaningResult
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +27,7 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val isScanning: Boolean = false,
     val isCleaning: Boolean = false,
+    val isCacheCleared: Boolean = false,
     val hasUsageAccess: Boolean = true,
     val cleaningProgress: Pair<Int, Int>? = null,
     val currentCleaningPackage: String? = null,
@@ -47,9 +50,23 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var scanJob: Job? = null
+
     init {
         loadData()
         observePreferences()
+        observeCleanerEvents()
+    }
+
+    private fun observeCleanerEvents() {
+        viewModelScope.launch {
+            cleanerRepository.cacheCleanedEvent.collect {
+                // When cache cleaning succeeds anywhere in the app, update dashboard storage stats
+                if (!_uiState.value.isCleaning) {
+                    scanAppsInternal()
+                }
+            }
+        }
     }
 
     private fun observePreferences() {
@@ -90,7 +107,8 @@ class HomeViewModel(
     }
 
     fun loadData() {
-        viewModelScope.launch {
+        scanJob?.cancel()
+        scanJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, isScanning = true)
             scanAppsInternal()
             _uiState.value = _uiState.value.copy(isLoading = false, isScanning = false)
@@ -98,8 +116,9 @@ class HomeViewModel(
     }
 
     fun scanApps() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isScanning = true)
+        scanJob?.cancel()
+        scanJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isScanning = true, isCacheCleared = false)
             scanAppsInternal()
             _uiState.value = _uiState.value.copy(isScanning = false)
         }
@@ -117,7 +136,8 @@ class HomeViewModel(
             hasUsageAccess = hasUsage,
             totalCacheBytes = totalCache,
             totalAppsCount = apps.size,
-            lastScanTime = currentTime
+            lastScanTime = currentTime,
+            isCacheCleared = totalCache == 0L || _uiState.value.isCacheCleared
         )
     }
 
@@ -138,11 +158,15 @@ class HomeViewModel(
             val apps = appRepository.getInstalledApps(includeSystemApps = showSystemApps)
             val packagesToClean = apps.filter { (it.storageInfo?.cacheBytes ?: 0L) > 0L }.map { it.packageName }
 
-            if (packagesToClean.isEmpty()) return@launch
+            if (packagesToClean.isEmpty()) {
+                _uiState.value = _uiState.value.copy(isCacheCleared = true)
+                return@launch
+            }
 
             _uiState.value = _uiState.value.copy(
                 isCleaning = true,
-                cleaningProgress = Pair(0, packagesToClean.size)
+                cleaningProgress = Pair(0, packagesToClean.size),
+                isCacheCleared = false
             )
 
             val engine = cleanerRepository.getEngine(_uiState.value.accessMode)
@@ -164,7 +188,8 @@ class HomeViewModel(
                 isCleaning = false,
                 cleaningProgress = null,
                 currentCleaningPackage = null,
-                cleanResults = results
+                cleanResults = results,
+                isCacheCleared = true
             )
         }
     }

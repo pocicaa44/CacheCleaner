@@ -1,12 +1,10 @@
 package com.example.cachecleaner.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +15,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.res.Configuration
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.cachecleaner.core.utils.FileSizeFormatter
+import com.example.cachecleaner.ui.theme.CacheCleanerTheme
 
 @Composable
 fun SelectionBottomBar(
@@ -28,9 +29,9 @@ fun SelectionBottomBar(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 3.dp,
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        shape = MaterialTheme.shapes.extraLarge
     ) {
         Row(
             modifier = Modifier
@@ -55,14 +56,23 @@ fun SelectionBottomBar(
 
             Button(
                 onClick = onClearClick,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                shape = ButtonDefaults.shape
             ) {
                 Text("Clear Selected")
             }
         }
+    }
+}
+
+@Preview(name = "Selection Bar - Light", showBackground = true)
+@Preview(name = "Selection Bar - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SelectionBottomBarPreview() {
+    CacheCleanerTheme(dynamicColor = false) {
+        SelectionBottomBar(
+            selectedCount = 5,
+            selectedCacheBytes = 1024L * 1024L * 320L,
+            onClearClick = {}
+        )
     }
 }

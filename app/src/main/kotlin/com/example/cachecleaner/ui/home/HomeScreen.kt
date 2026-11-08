@@ -2,6 +2,11 @@ package com.example.cachecleaner.ui.home
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
@@ -49,7 +56,6 @@ import com.example.cachecleaner.domain.model.AccessMode
 import com.example.cachecleaner.domain.model.AccessStatus
 import com.example.cachecleaner.ui.components.AccessStatusCard
 import com.example.cachecleaner.ui.components.AppTopBar
-import com.example.cachecleaner.ui.components.CleanResultDialog
 import com.example.cachecleaner.ui.components.ConfirmCleanDialog
 import com.example.cachecleaner.ui.components.StorageSummaryCard
 
@@ -86,7 +92,7 @@ fun HomeScreen(
             if (!uiState.hasUsageAccess) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     )
@@ -116,7 +122,7 @@ fun HomeScreen(
                                     // fallback
                                 }
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ButtonDefaults.shape,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.error,
                                 contentColor = MaterialTheme.colorScheme.onError
@@ -135,8 +141,45 @@ fun HomeScreen(
                 appCount = uiState.totalAppsCount,
                 lastScanTime = uiState.lastScanTime,
                 isCalculating = isCalculating,
+                isCacheCleared = uiState.isCacheCleared,
                 onRefresh = { viewModel.scanApps() }
             )
+
+            // Gimmick: Prominent Cache Cleared banner when cache is cleared
+            AnimatedVisibility(
+                visible = uiState.isCacheCleared && !uiState.isCleaning,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            text = "Cache Cleared",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
 
             // Current Access Status Card
             AccessStatusCard(
@@ -150,9 +193,9 @@ fun HomeScreen(
             if (uiState.isCleaning) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -196,7 +239,7 @@ fun HomeScreen(
                     onClick = { viewModel.scanApps() },
                     modifier = Modifier.weight(1f),
                     enabled = !uiState.isCleaning && !isCalculating,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = ButtonDefaults.outlinedShape
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
@@ -211,11 +254,7 @@ fun HomeScreen(
                         onClick = onNavigateToApps,
                         modifier = Modifier.weight(1.5f),
                         enabled = !uiState.isCleaning && !isCalculating,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        shape = ButtonDefaults.shape
                     ) {
                         Icon(
                             imageVector = Icons.Default.Apps,
@@ -228,12 +267,8 @@ fun HomeScreen(
                     Button(
                         onClick = { showConfirmDialog = true },
                         modifier = Modifier.weight(1.5f),
-                        enabled = !uiState.isCleaning && !isCalculating && uiState.totalCacheBytes > 0L && uiState.accessStatus == AccessStatus.AVAILABLE,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
+                        enabled = !uiState.isCleaning && !isCalculating && uiState.totalCacheBytes > 0L && uiState.accessStatus == AccessStatus.AVAILABLE && !uiState.isCacheCleared,
+                        shape = ButtonDefaults.shape
                     ) {
                         if (uiState.isCleaning) {
                             CircularProgressIndicator(
@@ -243,6 +278,13 @@ fun HomeScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Cleaning...")
+                        } else if (uiState.isCacheCleared) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 6.dp)
+                            )
+                            Text("Cache Cleared")
                         } else {
                             Icon(
                                 imageVector = Icons.Default.CleaningServices,
@@ -266,13 +308,6 @@ fun HomeScreen(
                     viewModel.clearAllCache()
                 },
                 onDismiss = { showConfirmDialog = false }
-            )
-        }
-
-        uiState.cleanResults?.let { results ->
-            CleanResultDialog(
-                results = results,
-                onDismiss = { viewModel.dismissResultDialog() }
             )
         }
     }

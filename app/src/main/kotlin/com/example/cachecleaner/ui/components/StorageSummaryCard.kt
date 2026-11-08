@@ -13,9 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Card
@@ -30,7 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import android.content.res.Configuration
 import com.example.cachecleaner.core.utils.FileSizeFormatter
+import com.example.cachecleaner.ui.theme.CacheCleanerTheme
 
 @Composable
 fun StorageSummaryCard(
@@ -39,13 +41,14 @@ fun StorageSummaryCard(
     lastScanTime: String,
     modifier: Modifier = Modifier,
     isCalculating: Boolean = false,
+    isCacheCleared: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(
@@ -132,6 +135,32 @@ fun StorageSummaryCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                } else if (isCacheCleared) {
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Text(
+                                text = "Cache Cleared",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (totalCacheBytes > 0) "${FileSizeFormatter.format(totalCacheBytes)} remaining" else "0 B cleanable cache",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 } else {
                     Column {
                         Text(
@@ -171,5 +200,19 @@ fun StorageSummaryCard(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Storage Summary - Light", showBackground = true)
+@Preview(name = "Storage Summary - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun StorageSummaryCardPreview() {
+    CacheCleanerTheme(dynamicColor = false) {
+        StorageSummaryCard(
+            totalCacheBytes = 1024L * 1024L * 256L,
+            appCount = 42,
+            lastScanTime = "12:00 PM",
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

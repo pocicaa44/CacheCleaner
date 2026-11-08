@@ -1,6 +1,5 @@
 package com.example.cachecleaner.ui.apps
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -10,8 +9,8 @@ import com.example.cachecleaner.data.preferences.UserPreferencesRepository
 import com.example.cachecleaner.domain.model.AccessMode
 import com.example.cachecleaner.domain.model.AppFilter
 import com.example.cachecleaner.domain.model.AppInfo
-import com.example.cachecleaner.domain.model.CleaningResult
 import com.example.cachecleaner.domain.model.SortOption
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,24 +20,12 @@ import kotlinx.coroutines.launch
 data class AppsUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
-    val isCleaning: Boolean = false,
-    val cleaningProgress: Pair<Int, Int>? = null,
-    val currentCleaningPackage: String? = null,
     val apps: List<AppInfo> = emptyList(),
-    val selectedPackages: Set<String> = emptySet(),
     val searchQuery: String = "",
     val filter: AppFilter = AppFilter.ALL,
-    val sortOption: SortOption = SortOption.CACHE_DESC,
-    val accessMode: AccessMode = AccessMode.STANDARD,
-    val cleanResults: List<CleaningResult>? = null,
-    val errorMessage: String? = null
-) {
-    val selectedApps: List<AppInfo>
-        get() = apps.filter { it.packageName in selectedPackages }
-
-    val selectedCacheBytes: Long
-        get() = selectedApps.sumOf { it.storageInfo?.cacheBytes ?: 0L }
-}
+    val sortOption: SortOption = SortOption.SIZE_DESC,
+    val accessMode: AccessMode = AccessMode.STANDARD
+)
 
 class AppsViewModel(
     private val appRepository: AppRepository,
@@ -49,8 +36,20 @@ class AppsViewModel(
     private val _uiState = MutableStateFlow(AppsUiState())
     val uiState: StateFlow<AppsUiState> = _uiState.asStateFlow()
 
+    private var refreshJob: Job? = null
+
     init {
         loadPreferencesAndApps()
+        observeCleanerEvents()
+    }
+
+    private fun observeCleanerEvents() {
+        viewModelScope.launch {
+            cleanerRepository.cacheCleanedEvent.collect {
+                // When cache cleaning succeeds anywhere in the app, refresh list to update sizes
+                refreshAppsInternal()
+            }
+        }
     }
 
     private fun loadPreferencesAndApps() {
@@ -70,42 +69,41 @@ class AppsViewModel(
     }
 
     fun refreshApps(isPullToRefresh: Boolean = false) {
-        viewModelScope.launch {
-            if (isPullToRefresh) {
-                _uiState.value = _uiState.value.copy(isRefreshing = true)
-            } else if (_uiState.value.apps.isEmpty()) {
-                _uiState.value = _uiState.value.copy(isLoading = true)
-            } else {
-                _uiState.value = _uiState.value.copy(isRefreshing = true)
-            }
-
-            val showSystemApps = userPreferencesRepository.showSystemAppsFlow.first()
-            val apps = appRepository.getInstalledApps(
-                includeSystemApps = showSystemApps,
-                filter = _uiState.value.filter,
-                sortOption = _uiState.value.sortOption,
-                searchQuery = _uiState.value.searchQuery
-            )
-
-            // Remove uninstalled apps from selection
-            val currentSelected = _uiState.value.selectedPackages.intersect(apps.map { it.packageName }.toSet())
-
-            _uiState.value = _uiState.value.copy(
-                isLoading = false,
-                isRefreshing = false,
-                apps = apps,
-                selectedPackages = currentSelected
-            )
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            refreshAppsInternal(isPullToRefresh)
         }
+    }
+
+    private suspend fun refreshAppsInternal(isPullToRefresh: Boolean = false) {
+        if (isPullToRefresh) {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+        } else if (_uiState.value.apps.isEmpty()) {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+        } else {
+            _uiState.value = _uiState.value.copy(isRefreshing = true)
+        }
+
+        val showSystemApps = userPreferencesRepository.showSystemAppsFlow.first()
+        val apps = appRepository.getInstalledApps(
+            includeSystemApps = showSystemApps,
+            filter = _uiState.value.filter,
+            sortOption = _uiState.value.sortOption,
+            searchQuery = _uiState.value.searchQuery
+        )
+
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            isRefreshing = false,
+            apps = apps
+        )
     }
 
     fun onAppResumed() {
         viewModelScope.launch {
             val mode = userPreferencesRepository.accessModeFlow.first()
             _uiState.value = _uiState.value.copy(accessMode = mode)
-            if (_uiState.value.apps.isEmpty()) {
-                refreshApps()
-            }
+            refreshApps()
         }
     }
 
@@ -128,63 +126,6 @@ class AppsViewModel(
             _uiState.value = _uiState.value.copy(sortOption = sortOption)
             refreshApps()
         }
-    }
-
-    fun toggleSelect(packageName: String) {
-        val current = _uiState.value.selectedPackages.toMutableSet()
-        if (current.contains(packageName)) {
-            current.remove(packageName)
-        } else {
-            current.add(packageName)
-        }
-        _uiState.value = _uiState.value.copy(selectedPackages = current)
-    }
-
-    fun selectAll() {
-        val allPackages = _uiState.value.apps.map { it.packageName }.toSet()
-        _uiState.value = _uiState.value.copy(selectedPackages = allPackages)
-    }
-
-    fun clearSelection() {
-        _uiState.value = _uiState.value.copy(selectedPackages = emptySet())
-    }
-
-    fun cleanSelected() {
-        viewModelScope.launch {
-            val packagesToClean = _uiState.value.selectedPackages.toList()
-            if (packagesToClean.isEmpty()) return@launch
-
-            _uiState.value = _uiState.value.copy(
-                isCleaning = true,
-                cleaningProgress = Pair(0, packagesToClean.size)
-            )
-
-            val engine = cleanerRepository.getEngine(_uiState.value.accessMode)
-            val results = cleanerRepository.cleanBatchAndVerify(
-                engine = engine,
-                packageNames = packagesToClean,
-                onProgress = { current, total, pkg ->
-                    _uiState.value = _uiState.value.copy(
-                        cleaningProgress = Pair(current, total),
-                        currentCleaningPackage = pkg
-                    )
-                }
-            )
-
-            refreshApps()
-
-            _uiState.value = _uiState.value.copy(
-                isCleaning = false,
-                cleaningProgress = null,
-                currentCleaningPackage = null,
-                selectedPackages = emptySet(),
-                cleanResults = results
-            )
-        }
-    }
-
-    fun dismissResultDialog() {
-        _uiState.value = _uiState.value.copy(cleanResults = null)
     }
 
     class Factory(

@@ -24,7 +24,7 @@ class AppRepository(
     suspend fun getInstalledApps(
         includeSystemApps: Boolean = false,
         filter: AppFilter = AppFilter.ALL,
-        sortOption: SortOption = SortOption.CACHE_DESC,
+        sortOption: SortOption = SortOption.SIZE_DESC,
         searchQuery: String = ""
     ): List<AppInfo> = withContext(Dispatchers.IO) {
         val installedApplications = try {
@@ -97,8 +97,8 @@ class AppRepository(
 
         // 3. Sort list in-place
         when (sortOption) {
-            SortOption.CACHE_DESC -> appList.sortByDescending { it.storageInfo?.cacheBytes ?: -1L }
-            SortOption.CACHE_ASC -> appList.sortBy { it.storageInfo?.cacheBytes ?: Long.MAX_VALUE }
+            SortOption.SIZE_DESC -> appList.sortByDescending { it.storageInfo?.totalBytes ?: -1L }
+            SortOption.SIZE_ASC -> appList.sortBy { it.storageInfo?.totalBytes ?: Long.MAX_VALUE }
             SortOption.NAME_ASC -> appList.sortBy { it.appName.lowercase() }
             SortOption.NAME_DESC -> appList.sortByDescending { it.appName.lowercase() }
         }

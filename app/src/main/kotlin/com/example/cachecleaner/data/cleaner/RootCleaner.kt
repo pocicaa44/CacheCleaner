@@ -2,6 +2,7 @@ package com.example.cachecleaner.data.cleaner
 
 import com.example.cachecleaner.core.access.RootManager
 import com.example.cachecleaner.core.shell.ShellExecutor
+import com.example.cachecleaner.core.utils.CacheCleaningScript
 import com.example.cachecleaner.core.utils.PackageValidator
 import com.example.cachecleaner.domain.model.AccessMode
 import com.example.cachecleaner.domain.model.AccessStatus
@@ -36,20 +37,19 @@ class RootCleaner : CacheCleanerEngine {
         }
 
         try {
-            // STRICT SAFETY: Delete ONLY cache directories. NEVER touch databases or shared_prefs!
-            val command = arrayOf(
-                "su", "-c",
-                """
-                rm -rf /data/user/0/$packageName/cache/*
-                rm -rf /data/user/0/$packageName/code_cache/*
-                rm -rf /sdcard/Android/data/$packageName/cache/*
-                sync
-                """.trimIndent()
-            )
+            // STRICT SAFETY: Target ONLY cache and code_cache directories.
+            // NEVER touch databases, shared_prefs, files, or credential stores!
+            val script = CacheCleaningScript.buildCacheCleanScript(packageName)
+            val command = arrayOf("su", "-c", script)
+            val result = ShellExecutor.execute(command, timeoutMs = 15_000L)
 
-            val result = ShellExecutor.execute(command, timeoutMs = 8_000L)
             if (result.isSuccess) {
-                CleaningResult(packageName = packageName, status = CleaningStatus.SUCCESS)
+                val freedBytes = CacheCleaningScript.parseFreedBytes(result.stdout)
+                CleaningResult(
+                    packageName = packageName,
+                    status = CleaningStatus.SUCCESS,
+                    freedBytes = freedBytes
+                )
             } else {
                 CleaningResult(
                     packageName = packageName,
@@ -63,6 +63,59 @@ class RootCleaner : CacheCleanerEngine {
                 status = CleaningStatus.FAILED,
                 errorMessage = e.message ?: "Failed executing root command"
             )
+        }
+    }
+
+    suspend fun clearBatch(packageNames: List<String>): CleaningResult = withContext(Dispatchers.IO) {
+        if (packageNames.isEmpty()) {
+            trimAllCaches()
+            return@withContext CleaningResult(packageName = "all", status = CleaningStatus.SUCCESS)
+        }
+
+        if (checkAvailability() != AccessStatus.AVAILABLE) {
+            return@withContext CleaningResult(
+                packageName = "batch",
+                status = CleaningStatus.PERMISSION_DENIED,
+                errorMessage = "Root access not available or superuser permission denied"
+            )
+        }
+
+        try {
+            val script = CacheCleaningScript.buildBatchCacheCleanScript(packageNames)
+            val command = arrayOf("su", "-c", script)
+            val result = ShellExecutor.execute(command, timeoutMs = 25_000L)
+
+            if (result.isSuccess) {
+                val freedBytes = CacheCleaningScript.parseFreedBytes(result.stdout)
+                CleaningResult(
+                    packageName = "batch",
+                    status = CleaningStatus.SUCCESS,
+                    freedBytes = freedBytes
+                )
+            } else {
+                CleaningResult(
+                    packageName = "batch",
+                    status = CleaningStatus.FAILED,
+                    errorMessage = result.stderr.ifBlank { "Root batch execution failed (exit code ${result.exitCode})" }
+                )
+            }
+        } catch (e: Exception) {
+            CleaningResult(
+                packageName = "batch",
+                status = CleaningStatus.FAILED,
+                errorMessage = e.message ?: "Failed executing root batch command"
+            )
+        }
+    }
+
+    suspend fun trimAllCaches() = withContext(Dispatchers.IO) {
+        try {
+            ShellExecutor.execute(
+                arrayOf("su", "-c", "pm trim-caches 999999999999 2>/dev/null; sync"),
+                timeoutMs = 10_000L
+            )
+        } catch (_: Exception) {
+            // Non-fatal global trim
         }
     }
 }

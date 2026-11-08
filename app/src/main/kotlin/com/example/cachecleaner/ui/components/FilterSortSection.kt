@@ -76,30 +76,30 @@ fun FilterSortSection(
                 onDismissRequest = { sortMenuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Largest cache") },
-                    onClick = {
-                        onSortChange(SortOption.CACHE_DESC)
-                        sortMenuExpanded = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Smallest cache") },
-                    onClick = {
-                        onSortChange(SortOption.CACHE_ASC)
-                        sortMenuExpanded = false
-                    }
-                )
-                DropdownMenuItem(
-                    text = { Text("Name A–Z") },
+                    text = { Text("A-Z") },
                     onClick = {
                         onSortChange(SortOption.NAME_ASC)
                         sortMenuExpanded = false
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Name Z–A") },
+                    text = { Text("Z-A") },
                     onClick = {
                         onSortChange(SortOption.NAME_DESC)
+                        sortMenuExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Largest Size") },
+                    onClick = {
+                        onSortChange(SortOption.SIZE_DESC)
+                        sortMenuExpanded = false
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Smallest Size") },
+                    onClick = {
+                        onSortChange(SortOption.SIZE_ASC)
                         sortMenuExpanded = false
                     }
                 )

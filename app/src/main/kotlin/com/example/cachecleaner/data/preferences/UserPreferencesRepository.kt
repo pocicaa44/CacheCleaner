@@ -53,10 +53,10 @@ class UserPreferencesRepository(private val context: Context) {
 
     val sortOptionFlow: Flow<SortOption> = context.dataStore.data.map { preferences ->
         when (preferences[PreferencesKeys.SORT_OPTION]) {
-            SortOption.CACHE_ASC.name -> SortOption.CACHE_ASC
+            SortOption.SIZE_ASC.name -> SortOption.SIZE_ASC
             SortOption.NAME_ASC.name -> SortOption.NAME_ASC
             SortOption.NAME_DESC.name -> SortOption.NAME_DESC
-            else -> SortOption.CACHE_DESC
+            else -> SortOption.SIZE_DESC
         }
     }
 

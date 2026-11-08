@@ -1,6 +1,7 @@
 package com.example.cachecleaner
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
@@ -21,10 +22,10 @@ fun MainNavigation() {
     val context = LocalContext.current
     val backStack = rememberNavBackStack(MainRoute)
 
-    val storageStatsRepository = StorageStatsRepository(context)
-    val appRepository = AppRepository(context, storageStatsRepository)
-    val cleanerRepository = CleanerRepository(context, storageStatsRepository)
-    val userPreferencesRepository = UserPreferencesRepository(context)
+    val storageStatsRepository = remember(context) { StorageStatsRepository(context) }
+    val appRepository = remember(context, storageStatsRepository) { AppRepository(context, storageStatsRepository) }
+    val cleanerRepository = remember(context, storageStatsRepository) { CleanerRepository(context, storageStatsRepository) }
+    val userPreferencesRepository = remember(context) { UserPreferencesRepository(context) }
 
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModel.Factory(

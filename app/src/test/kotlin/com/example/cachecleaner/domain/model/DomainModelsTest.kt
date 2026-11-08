@@ -45,4 +45,25 @@ class DomainModelsTest {
         assertFalse(app.isSystemApp)
         assertEquals(1500L, app.storageInfo?.totalBytes)
     }
+
+    @Test
+    fun testCacheCleanedEventModel() {
+        val event = CacheCleanedEvent(
+            packages = setOf("com.example.app1", "com.example.app2"),
+            freedBytes = 2048L
+        )
+
+        assertEquals(2, event.packages.size)
+        assertTrue(event.packages.contains("com.example.app1"))
+        assertEquals(2048L, event.freedBytes)
+    }
+
+    @Test
+    fun testSortOptionValues() {
+        val options = SortOption.entries
+        assertTrue(options.contains(SortOption.SIZE_DESC))
+        assertTrue(options.contains(SortOption.SIZE_ASC))
+        assertTrue(options.contains(SortOption.NAME_ASC))
+        assertTrue(options.contains(SortOption.NAME_DESC))
+    }
 }

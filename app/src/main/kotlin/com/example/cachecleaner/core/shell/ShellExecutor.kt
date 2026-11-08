@@ -1,10 +1,9 @@
 package com.example.cachecleaner.core.shell
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 data class ShellResult(
     val exitCode: Int,
@@ -24,12 +23,18 @@ object ShellExecutor {
         val result = withTimeoutOrNull(timeoutMs) {
             try {
                 val process = ProcessBuilder(*command).start()
-                val stdoutReader = BufferedReader(InputStreamReader(process.inputStream))
-                val stderrReader = BufferedReader(InputStreamReader(process.errorStream))
+
+                // Read stdout and stderr concurrently to prevent pipe buffer deadlock
+                val stdoutDeferred = async(Dispatchers.IO) {
+                    process.inputStream.bufferedReader().use { it.readText() }
+                }
+                val stderrDeferred = async(Dispatchers.IO) {
+                    process.errorStream.bufferedReader().use { it.readText() }
+                }
 
                 val exitCode = process.waitFor()
-                val stdout = stdoutReader.readText()
-                val stderr = stderrReader.readText()
+                val stdout = stdoutDeferred.await()
+                val stderr = stderrDeferred.await()
 
                 ShellResult(exitCode = exitCode, stdout = stdout, stderr = stderr)
             } catch (e: Exception) {

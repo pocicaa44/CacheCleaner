@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.CheckCircle
@@ -28,8 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.res.Configuration
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.cachecleaner.domain.model.AccessMode
 import com.example.cachecleaner.domain.model.AccessStatus
+import com.example.cachecleaner.ui.theme.CacheCleanerTheme
 
 @Composable
 fun AccessStatusCard(
@@ -41,9 +43,9 @@ fun AccessStatusCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -76,8 +78,8 @@ fun AccessStatusCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.secondaryContainer
                 ) {
                     Text(
                         text = when (currentMode) {
@@ -87,7 +89,7 @@ fun AccessStatusCard(
                         },
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -175,15 +177,25 @@ fun AccessStatusCard(
                 FilledTonalButton(
                     onClick = onRequestPermission,
                     modifier = Modifier.align(Alignment.End),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    shape = ButtonDefaults.filledTonalShape
                 ) {
                     Text(if (status == AccessStatus.PERMISSION_REQUIRED) "Grant Permission" else "Check Status")
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Access Status - Light", showBackground = true)
+@Preview(name = "Access Status - Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AccessStatusCardPreview() {
+    CacheCleanerTheme(dynamicColor = false) {
+        AccessStatusCard(
+            currentMode = AccessMode.ROOT,
+            status = AccessStatus.AVAILABLE,
+            onRequestPermission = {},
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
