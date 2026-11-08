@@ -6,95 +6,95 @@
 
     <!-- Home Screen -->
     <string name="storage_overview_title">Storage Overview</string>
-    <string name="storage_overview_subtitle">Total cleanable cache detected</string>
+    <string name="storage_overview_subtitle">Cleanable cache</string>
     <string name="last_scan_prefix">Last scan: %1$s</string>
-    <string name="not_scanned_yet">Not scanned yet</string>
-    <string name="action_scan_apps">Scan Apps</string>
+    <string name="not_scanned_yet">Never</string>
+    <string name="action_scan_apps">Scan</string>
     <string name="action_clear_all_cache">Clear All Cache</string>
-    <string name="scanning_applications">Scanning applications…</string>
-    <string name="cleaning_cache_progress">Cleaning cache… (%1$d of %2$d)</string>
+    <string name="scanning_applications">Scanning…</string>
+    <string name="cleaning_cache_progress">Cleaning %1$d of %2$d…</string>
 
     <!-- Usage Access Permission Banner -->
     <string name="usage_access_needed_title">Usage Access Required</string>
-    <string name="usage_access_needed_desc">To calculate and display accurate cache and storage usage, Android requires Usage Access permission.</string>
-    <string name="action_grant_usage_access">Grant Usage Access</string>
+    <string name="usage_access_needed_desc">Usage access is required to inspect application cache.</string>
+    <string name="action_grant_usage_access">Grant Access</string>
 
     <!-- Access Management -->
     <string name="access_mode_title">Access Mode</string>
-    <string name="status_shizuku_ready">Connected &amp; Ready</string>
-    <string name="status_shizuku_ready_desc">Automated cache clearing enabled via Shizuku.</string>
+    <string name="status_shizuku_ready">Connected</string>
+    <string name="status_shizuku_ready_desc">Automated cleaning enabled via Shizuku.</string>
     <string name="status_permission_required">Permission Required</string>
-    <string name="status_permission_required_desc">Grant permission to allow automated cache cleaning.</string>
+    <string name="status_permission_required_desc">Permission required for automated cleaning.</string>
     <string name="status_service_inactive">Service Inactive</string>
-    <string name="status_service_inactive_desc">Shizuku service is not running on this device.</string>
+    <string name="status_service_inactive_desc">Shizuku service is not running.</string>
     <string name="status_not_installed">Not Installed</string>
-    <string name="status_not_installed_desc">Shizuku manager application is not installed.</string>
+    <string name="status_not_installed_desc">Shizuku is not installed.</string>
     <string name="status_permission_denied">Permission Denied</string>
-    <string name="status_permission_denied_desc">Root or elevated privilege request was rejected.</string>
+    <string name="status_permission_denied_desc">Permission was denied.</string>
     <string name="status_unsupported">Unsupported</string>
-    <string name="status_unsupported_desc">Automated operation is not supported on this platform.</string>
+    <string name="status_unsupported_desc">Not supported on this device.</string>
     <string name="action_grant_permission">Grant Permission</string>
-    <string name="action_check_service">Check Service</string>
+    <string name="action_check_service">Check Status</string>
 
     <!-- Apps Screen -->
-    <string name="search_placeholder">Search applications…</string>
+    <string name="search_placeholder">Search apps…</string>
     <string name="filter_all">All</string>
-    <string name="filter_user_apps">User Apps</string>
-    <string name="filter_system_apps">System Apps</string>
-    <string name="sort_cache_desc">Cache: Largest First</string>
-    <string name="sort_cache_asc">Cache: Smallest First</string>
-    <string name="sort_name_asc">Name: A–Z</string>
-    <string name="sort_name_desc">Name: Z–A</string>
+    <string name="filter_user_apps">User</string>
+    <string name="filter_system_apps">System</string>
+    <string name="sort_cache_desc">Largest cache</string>
+    <string name="sort_cache_asc">Smallest cache</string>
+    <string name="sort_name_asc">Name A–Z</string>
+    <string name="sort_name_desc">Name Z–A</string>
     <string name="action_select_all">Select All</string>
     <string name="action_deselect_all">Deselect All</string>
     <string name="selected_count_format">%1$d selected</string>
-    <string name="estimated_cache_format">Est. Cache: %1$s</string>
-    <string name="action_clear_selected">Clear Selected (%1$d)</string>
-    <string name="no_apps_found">No Applications Found</string>
-    <string name="no_apps_found_desc">Try scanning applications again.</string>
-    <string name="no_matching_apps">No Matching Applications</string>
-    <string name="no_matching_apps_desc">No applications match \'%1$s\'. Try another search query.</string>
+    <string name="estimated_cache_format">Estimated: %1$s</string>
+    <string name="action_clear_selected">Clear Selected</string>
+    <string name="no_apps_found">No apps found</string>
+    <string name="no_apps_found_desc">Scan again to find apps.</string>
+    <string name="no_matching_apps">No results found</string>
+    <string name="no_matching_apps_desc">No results for \'%1$s\'.</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_clear_search">Clear Search</string>
 
     <!-- App Detail Screen -->
     <string name="app_details_title">App Details</string>
-    <string name="app_info_unavailable">Application information unavailable.</string>
-    <string name="storage_breakdown_title">Storage Usage Breakdown</string>
-    <string name="storage_binary">Application Binary</string>
-    <string name="storage_user_data">User Private Data</string>
-    <string name="storage_cache">Cache (Cleanable)</string>
-    <string name="storage_total">Total Space Used</string>
-    <string name="action_clear_app_cache">Clear App Cache</string>
-    <string name="action_open_app_settings">Open System App Settings</string>
+    <string name="app_info_unavailable">App unavailable.</string>
+    <string name="storage_breakdown_title">Storage breakdown</string>
+    <string name="storage_binary">App size</string>
+    <string name="storage_user_data">User data</string>
+    <string name="storage_cache">Cache</string>
+    <string name="storage_total">Total space</string>
+    <string name="action_clear_app_cache">Clear Cache</string>
+    <string name="action_open_app_settings">Open Settings</string>
 
     <!-- Dialogs -->
-    <string name="dialog_confirm_title">Clear selected cache?</string>
-    <string name="dialog_confirm_body">You are about to clear cache for %1$d application(s) (~%2$s).\n\nYour personal data, accounts, login sessions, and database files will NOT be affected.</string>
+    <string name="dialog_confirm_title">Clear cache?</string>
+    <string name="dialog_confirm_body">Clear cache for %1$d apps (%2$s)?\n\nPersonal data, accounts, and databases will not be affected.</string>
     <string name="dialog_confirm_action">Clear Cache</string>
     <string name="dialog_cancel_action">Cancel</string>
-    <string name="dialog_completed_title">Cleaning Completed</string>
-    <string name="dialog_completed_success">• %1$d application(s) cleaned successfully</string>
-    <string name="dialog_completed_failed">• %1$d application(s) failed or denied</string>
-    <string name="dialog_completed_total">Total space freed: %1$s</string>
+    <string name="dialog_completed_title">Cleaning complete</string>
+    <string name="dialog_completed_success">• %1$d apps cleaned</string>
+    <string name="dialog_completed_failed">• %1$d failed</string>
+    <string name="dialog_completed_total">Space freed: %1$s</string>
     <string name="dialog_done_action">Done</string>
 
     <!-- Settings Screen -->
     <string name="settings_appearance">Appearance</string>
-    <string name="theme_system">System Default</string>
-    <string name="theme_light">Light Mode</string>
-    <string name="theme_dark">Dark Mode</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="settings_access_mgmt">Access Management</string>
-    <string name="preferred_engine">Preferred Cleaning Engine</string>
-    <string name="engine_shizuku">Shizuku Mode (Automated ADB)</string>
-    <string name="engine_root">Root Mode (Superuser su)</string>
-    <string name="engine_standard">Standard Mode (Settings Redirect)</string>
-    <string name="status_shizuku">Shizuku Service Status</string>
-    <string name="status_root">Root Access Status</string>
-    <string name="settings_app_scanning">Application Scanning</string>
-    <string name="include_system_apps">Include System Applications</string>
-    <string name="include_system_apps_desc">Scan and show preinstalled OEM &amp; system packages</string>
-    <string name="about_title">About Cache Cleaner</string>
-    <string name="about_version">Version 1.0 (Native Android + Jetpack Compose)</string>
-    <string name="about_description">A lightweight, respectful utility built strictly for inspecting storage and clearing application cache safely without advertisements or background bloat.</string>
+    <string name="preferred_engine">Cleaning Method</string>
+    <string name="engine_shizuku">Shizuku</string>
+    <string name="engine_root">Root</string>
+    <string name="engine_standard">Standard</string>
+    <string name="status_shizuku">Shizuku</string>
+    <string name="status_root">Root</string>
+    <string name="settings_app_scanning">Applications</string>
+    <string name="include_system_apps">System apps</string>
+    <string name="include_system_apps_desc">Include preinstalled and system apps</string>
+    <string name="about_title">About</string>
+    <string name="about_version">Version 1.0</string>
+    <string name="about_description">Inspect and clear application cache safely.</string>
 </resources>

@@ -25,13 +25,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val appTheme by userPreferencesRepository.themeFlow.collectAsStateWithLifecycle(initialValue = AppTheme.SYSTEM)
+            val dynamicColor by userPreferencesRepository.dynamicColorFlow.collectAsStateWithLifecycle(initialValue = true)
             val isDark = when (appTheme) {
                 AppTheme.LIGHT -> false
                 AppTheme.DARK -> true
                 AppTheme.SYSTEM -> isSystemInDarkTheme()
             }
 
-            CacheCleanerTheme(darkTheme = isDark) {
+            CacheCleanerTheme(darkTheme = isDark, dynamicColor = dynamicColor) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

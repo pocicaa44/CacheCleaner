@@ -47,7 +47,7 @@ fun SelectionBottomBar(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Est. Cache: ${FileSizeFormatter.format(selectedCacheBytes)}",
+                    text = "Estimated: ${FileSizeFormatter.format(selectedCacheBytes)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -61,7 +61,7 @@ fun SelectionBottomBar(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text("Clear Selected ($selectedCount)")
+                Text("Clear Selected")
             }
         }
     }

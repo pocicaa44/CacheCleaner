@@ -30,9 +30,9 @@ data class HomeUiState(
     val currentCleaningPackage: String? = null,
     val totalCacheBytes: Long = 0L,
     val totalAppsCount: Int = 0,
-    val lastScanTime: String = "Not scanned yet",
-    val accessMode: AccessMode = AccessMode.SHIZUKU,
-    val accessStatus: AccessStatus = AccessStatus.SERVICE_NOT_RUNNING,
+    val lastScanTime: String = "Never",
+    val accessMode: AccessMode = AccessMode.STANDARD,
+    val accessStatus: AccessStatus = AccessStatus.AVAILABLE,
     val cleanResults: List<CleaningResult>? = null,
     val errorMessage: String? = null
 )
@@ -69,11 +69,31 @@ class HomeViewModel(
         }
     }
 
+    fun onAppResumed() {
+        viewModelScope.launch {
+            ShizukuManager.updateStatus()
+            val hasUsage = storageStatsRepository.hasUsageStatsPermission()
+            val status = cleanerRepository.checkModeAvailability(_uiState.value.accessMode)
+
+            _uiState.value = _uiState.value.copy(
+                hasUsageAccess = hasUsage,
+                accessStatus = status
+            )
+
+            // If initial cold-start scan was pending permission, complete it now; otherwise no refresh
+            if (hasUsage && _uiState.value.totalAppsCount == 0) {
+                _uiState.value = _uiState.value.copy(isScanning = true)
+                scanAppsInternal()
+                _uiState.value = _uiState.value.copy(isScanning = false)
+            }
+        }
+    }
+
     fun loadData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true, isScanning = true)
             scanAppsInternal()
-            _uiState.value = _uiState.value.copy(isLoading = false)
+            _uiState.value = _uiState.value.copy(isLoading = false, isScanning = false)
         }
     }
 

@@ -1,7 +1,6 @@
 package com.example.cachecleaner.data.cleaner
 
 import android.content.pm.IPackageDataObserver
-import android.content.pm.IPackageManager
 import android.os.Build
 import android.os.IBinder
 import com.example.cachecleaner.core.access.ShizukuManager
@@ -11,12 +10,10 @@ import com.example.cachecleaner.domain.model.AccessStatus
 import com.example.cachecleaner.domain.model.CleaningResult
 import com.example.cachecleaner.domain.model.CleaningStatus
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import rikka.shizuku.ShizukuBinderWrapper
 import rikka.shizuku.SystemServiceHelper
-import kotlin.coroutines.resume
+import java.lang.reflect.Method
 
 class ShizukuCleaner : CacheCleanerEngine {
 
@@ -27,10 +24,13 @@ class ShizukuCleaner : CacheCleanerEngine {
         return ShizukuManager.accessStatus.value
     }
 
-    private fun getPackageManager(): IPackageManager {
+    private fun getPackageManager(): Any {
         val binder: IBinder = SystemServiceHelper.getSystemService("package")
             ?: throw IllegalStateException("Failed to acquire package service binder from Shizuku")
-        return IPackageManager.Stub.asInterface(ShizukuBinderWrapper(binder))
+        val stubClass = Class.forName("android.content.pm.IPackageManager\$Stub")
+        val asInterfaceMethod = stubClass.getMethod("asInterface", IBinder::class.java)
+        return asInterfaceMethod.invoke(null, ShizukuBinderWrapper(binder))
+            ?: throw IllegalStateException("IPackageManager.Stub.asInterface returned null")
     }
 
     override suspend fun clearCache(packageName: String): CleaningResult = withContext(Dispatchers.IO) {
@@ -50,64 +50,74 @@ class ShizukuCleaner : CacheCleanerEngine {
             )
         }
 
-        // Primary mechanism: IPackageManager.deleteApplicationCacheFilesAsUser
         clearCacheViaBinder(packageName)
     }
 
-    private suspend fun clearCacheViaBinder(
-        packageName: String,
-        timeoutMs: Long = 8_000L
-    ): CleaningResult = withContext(Dispatchers.IO) {
-        val result = withTimeoutOrNull(timeoutMs) {
-            suspendCancellableCoroutine { continuation ->
-                val observer = object : IPackageDataObserver.Stub() {
-                    override fun onRemoveCompleted(pkg: String?, succeeded: Boolean) {
-                        if (continuation.isActive) {
-                            if (succeeded) {
-                                continuation.resume(
-                                    CleaningResult(
-                                        packageName = packageName,
-                                        status = CleaningStatus.SUCCESS
-                                    )
-                                )
-                            } else {
-                                continuation.resume(
-                                    CleaningResult(
-                                        packageName = packageName,
-                                        status = CleaningStatus.FAILED,
-                                        errorMessage = "System failed to clear cache for $packageName"
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
+    private fun clearCacheViaBinder(packageName: String): CleaningResult {
+        return try {
+            val pm = getPackageManager()
+            val pmClass = pm.javaClass
 
+            val methodWithUser: Method? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                pmClass.methods.firstOrNull {
+                    it.name == "deleteApplicationCacheFilesAsUser" && it.parameterTypes.size == 3
+                }
+            } else null
+
+            if (methodWithUser != null) {
+                methodWithUser.isAccessible = true
                 try {
-                    val pm = getPackageManager()
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        pm.deleteApplicationCacheFilesAsUser(packageName, 0, observer)
-                    } else {
-                        pm.deleteApplicationCacheFiles(packageName, observer)
+                    methodWithUser.invoke(pm, packageName, 0, null)
+                } catch (e: Throwable) {
+                    val dummyObserver = object : IPackageDataObserver.Stub() {
+                        override fun onRemoveCompleted(pkg: String?, succeeded: Boolean) {}
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        continuation.resume(
-                            CleaningResult(
-                                packageName = packageName,
-                                status = CleaningStatus.FAILED,
-                                errorMessage = e.message ?: "Binder transaction exception"
-                            )
-                        )
+                    methodWithUser.invoke(pm, packageName, 0, dummyObserver)
+                }
+            } else {
+                val methodFallback = pmClass.methods.firstOrNull {
+                    it.name == "deleteApplicationCacheFiles" && it.parameterTypes.size == 2
+                } ?: throw NoSuchMethodException("No deleteApplicationCacheFiles method found on IPackageManager")
+                methodFallback.isAccessible = true
+                try {
+                    methodFallback.invoke(pm, packageName, null)
+                } catch (e: Throwable) {
+                    val dummyObserver = object : IPackageDataObserver.Stub() {
+                        override fun onRemoveCompleted(pkg: String?, succeeded: Boolean) {}
                     }
+                    methodFallback.invoke(pm, packageName, dummyObserver)
                 }
             }
-        }
 
-        result ?: CleaningResult(
-            packageName = packageName,
-            status = CleaningStatus.FAILED,
-            errorMessage = "Operation timed out after ${timeoutMs}ms"
-        )
+            CleaningResult(
+                packageName = packageName,
+                status = CleaningStatus.SUCCESS
+            )
+        } catch (t: Throwable) {
+            val rootCause = t.cause ?: t
+            CleaningResult(
+                packageName = packageName,
+                status = CleaningStatus.FAILED,
+                errorMessage = rootCause.message ?: "Binder error: ${rootCause::class.java.simpleName}"
+            )
+        }
+    }
+
+    /**
+     * Request system-wide cache trim via IPackageManager.freeStorageAndNotify.
+     * Passing a high ideal storage size triggers PMS to delete LRU cache across all applications.
+     */
+    fun trimAllCaches() {
+        try {
+            val pm = getPackageManager()
+            val pmClass = pm.javaClass
+            val freeStorageMethod = pmClass.methods.firstOrNull {
+                it.name == "freeStorageAndNotify" && it.parameterTypes.size == 4
+            }
+            freeStorageMethod?.isAccessible = true
+            freeStorageMethod?.invoke(pm, null, Long.MAX_VALUE, 0, null)
+        } catch (e: Throwable) {
+            // Ignore non-fatal global trim exception
+        }
     }
 }

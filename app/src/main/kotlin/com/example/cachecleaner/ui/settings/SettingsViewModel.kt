@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
 
 data class SettingsUiState(
     val theme: AppTheme = AppTheme.SYSTEM,
-    val accessMode: AccessMode = AccessMode.SHIZUKU,
+    val dynamicColor: Boolean = true,
+    val accessMode: AccessMode = AccessMode.STANDARD,
     val showSystemApps: Boolean = false,
     val shizukuStatus: AccessStatus = AccessStatus.SERVICE_NOT_RUNNING,
     val rootStatus: AccessStatus = AccessStatus.NOT_INSTALLED
@@ -38,6 +39,11 @@ class SettingsViewModel(
         viewModelScope.launch {
             userPreferencesRepository.themeFlow.collect { theme ->
                 _uiState.value = _uiState.value.copy(theme = theme)
+            }
+        }
+        viewModelScope.launch {
+            userPreferencesRepository.dynamicColorFlow.collect { dynamicColor ->
+                _uiState.value = _uiState.value.copy(dynamicColor = dynamicColor)
             }
         }
         viewModelScope.launch {
@@ -71,6 +77,12 @@ class SettingsViewModel(
     fun setTheme(theme: AppTheme) {
         viewModelScope.launch {
             userPreferencesRepository.setTheme(theme)
+        }
+    }
+
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.setDynamicColor(enabled)
         }
     }
 

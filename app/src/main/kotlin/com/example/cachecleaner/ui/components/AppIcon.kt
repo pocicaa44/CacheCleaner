@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.util.LruCache
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,9 +19,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+
+private val bitmapCache = LruCache<Drawable, ImageBitmap>(120)
 
 @Composable
 fun AppIcon(
@@ -29,7 +33,12 @@ fun AppIcon(
     size: Dp = 44.dp
 ) {
     val imageBitmap = remember(icon) {
-        icon?.let { drawableToBitmap(it)?.asImageBitmap() }
+        if (icon == null) return@remember null
+        bitmapCache.get(icon) ?: run {
+            drawableToBitmap(icon)?.asImageBitmap()?.also {
+                bitmapCache.put(icon, it)
+            }
+        }
     }
 
     Box(

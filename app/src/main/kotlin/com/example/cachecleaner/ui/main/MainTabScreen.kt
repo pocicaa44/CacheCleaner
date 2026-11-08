@@ -76,7 +76,10 @@ fun MainTabScreen(
                 .padding(innerPadding)
         ) {
             when (currentTab) {
-                MainTab.HOME -> HomeScreen(viewModel = homeViewModel)
+                MainTab.HOME -> HomeScreen(
+                    viewModel = homeViewModel,
+                    onNavigateToApps = { selectedTabOrdinal = MainTab.APPS.ordinal }
+                )
                 MainTab.APPS -> AppsScreen(
                     viewModel = appsViewModel,
                     onAppClick = onNavigateToDetail

@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +40,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.cachecleaner.core.utils.FileSizeFormatter
 import com.example.cachecleaner.data.apps.AppRepository
 import com.example.cachecleaner.data.cleaner.CleanerRepository
@@ -60,7 +64,7 @@ fun AppDetailScreen(
     modifier: Modifier = Modifier
 ) {
     var appInfo by remember { mutableStateOf<AppInfo?>(null) }
-    var accessMode by remember { mutableStateOf(AccessMode.SHIZUKU) }
+    var accessMode by remember { mutableStateOf(AccessMode.STANDARD) }
     var isLoading by remember { mutableStateOf(true) }
     var isCleaning by remember { mutableStateOf(false) }
 
@@ -72,6 +76,16 @@ fun AppDetailScreen(
         accessMode = userPreferencesRepository.accessModeFlow.first()
         appInfo = appRepository.getAppDetails(packageName)
         isLoading = false
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        scope.launch {
+            accessMode = userPreferencesRepository.accessModeFlow.first()
+            val details = appRepository.getAppDetails(packageName)
+            if (details != null) {
+                appInfo = details
+            }
+        }
     }
 
     Scaffold(
@@ -99,7 +113,7 @@ fun AppDetailScreen(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Application information unavailable.")
+                    Text("App unavailable.")
                 }
             } else {
                 Column(
@@ -137,7 +151,7 @@ fun AppDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Storage Usage Breakdown",
+                                text = "Storage breakdown",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -145,18 +159,18 @@ fun AppDetailScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            StorageRow(label = "Application Binary", bytes = app.storageInfo?.appBytes)
+                            StorageRow(label = "App size", bytes = app.storageInfo?.appBytes)
                             Spacer(modifier = Modifier.height(8.dp))
-                            StorageRow(label = "User Private Data", bytes = app.storageInfo?.dataBytes)
+                            StorageRow(label = "User data", bytes = app.storageInfo?.dataBytes)
                             Spacer(modifier = Modifier.height(8.dp))
-                            StorageRow(label = "Cache (Cleanable)", bytes = app.storageInfo?.cacheBytes, isHighlighted = true)
+                            StorageRow(label = "Cache", bytes = app.storageInfo?.cacheBytes, isHighlighted = true)
 
                             Spacer(modifier = Modifier.height(12.dp))
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                             Spacer(modifier = Modifier.height(12.dp))
 
                             StorageRow(
-                                label = "Total Space Used",
+                                label = "Total space",
                                 bytes = app.storageInfo?.totalBytes,
                                 isTotal = true
                             )
@@ -180,7 +194,7 @@ fun AppDetailScreen(
                                         if (accessMode == AccessMode.STANDARD) {
                                             "Settings opened."
                                         } else {
-                                            "Cache cleared successfully! Freed $freedStr."
+                                            "Cache cleared: $freedStr freed."
                                         }
                                     )
                                 } else {
@@ -198,9 +212,12 @@ fun AppDetailScreen(
                     ) {
                         if (isCleaning) {
                             CircularProgressIndicator(
-                                modifier = Modifier.height(20.dp),
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.5.dp,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Clearing...")
                         } else {
                             Icon(
                                 imageVector = if (accessMode == AccessMode.STANDARD) Icons.AutoMirrored.Filled.OpenInNew else Icons.Default.CleaningServices,
@@ -208,7 +225,7 @@ fun AppDetailScreen(
                                 modifier = Modifier.padding(end = 8.dp)
                             )
                             Text(
-                                if (accessMode == AccessMode.STANDARD) "Open System App Settings" else "Clear App Cache"
+                                if (accessMode == AccessMode.STANDARD) "Open Settings" else "Clear Cache"
                             )
                         }
                     }

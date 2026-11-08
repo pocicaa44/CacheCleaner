@@ -20,6 +20,7 @@ class UserPreferencesRepository(private val context: Context) {
 
     private object PreferencesKeys {
         val THEME = stringPreferencesKey("app_theme")
+        val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val ACCESS_MODE = stringPreferencesKey("preferred_access_mode")
         val SHOW_SYSTEM_APPS = booleanPreferencesKey("show_system_apps")
         val SORT_OPTION = stringPreferencesKey("sort_option")
@@ -34,11 +35,15 @@ class UserPreferencesRepository(private val context: Context) {
         }
     }
 
+    val dynamicColorFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DYNAMIC_COLOR] ?: true
+    }
+
     val accessModeFlow: Flow<AccessMode> = context.dataStore.data.map { preferences ->
         when (preferences[PreferencesKeys.ACCESS_MODE]) {
+            AccessMode.SHIZUKU.name -> AccessMode.SHIZUKU
             AccessMode.ROOT.name -> AccessMode.ROOT
-            AccessMode.STANDARD.name -> AccessMode.STANDARD
-            else -> AccessMode.SHIZUKU
+            else -> AccessMode.STANDARD
         }
     }
 
@@ -66,6 +71,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setTheme(theme: AppTheme) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME] = theme.name
+        }
+    }
+
+    suspend fun setDynamicColor(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DYNAMIC_COLOR] = enabled
         }
     }
 

@@ -3,7 +3,6 @@ package com.example.cachecleaner.data.storage
 import android.app.AppOpsManager
 import android.app.usage.StorageStatsManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Process
 import android.os.UserHandle
 import android.os.storage.StorageManager
@@ -17,9 +16,8 @@ class StorageStatsRepository(private val context: Context) {
         context.getSystemService(Context.STORAGE_STATS_SERVICE) as? StorageStatsManager
     }
 
-    private val storageManager: StorageManager? by lazy {
-        context.getSystemService(Context.STORAGE_SERVICE) as? StorageManager
-    }
+    private val defaultUuid = StorageManager.UUID_DEFAULT
+    private val myUserHandle: UserHandle by lazy { Process.myUserHandle() }
 
     @Suppress("DEPRECATION")
     fun hasUsageStatsPermission(): Boolean {
@@ -32,15 +30,16 @@ class StorageStatsRepository(private val context: Context) {
         return mode == AppOpsManager.MODE_ALLOWED
     }
 
-    suspend fun getStorageInfoForPackage(packageName: String): StorageInfo? = withContext(Dispatchers.IO) {
+    suspend fun getStorageInfoForPackage(
+        packageName: String,
+        hasPermission: Boolean? = null
+    ): StorageInfo? = withContext(Dispatchers.IO) {
         val ssm = storageStatsManager ?: return@withContext null
-        if (!hasUsageStatsPermission()) return@withContext null
+        val permissionGranted = hasPermission ?: hasUsageStatsPermission()
+        if (!permissionGranted) return@withContext null
 
         try {
-            val uuid = StorageManager.UUID_DEFAULT
-            val user = Process.myUserHandle()
-            val stats = ssm.queryStatsForPackage(uuid, packageName, user)
-
+            val stats = ssm.queryStatsForPackage(defaultUuid, packageName, myUserHandle)
             StorageInfo(
                 appBytes = stats.appBytes,
                 dataBytes = stats.dataBytes,

@@ -26,7 +26,7 @@ fun SearchInputBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp),
-        placeholder = { Text("Search applications...") },
+        placeholder = { Text("Search apps…") },
         leadingIcon = {
             Icon(imageVector = Icons.Default.Search, contentDescription = "Search")
         },

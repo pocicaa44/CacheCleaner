@@ -8,25 +8,31 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import com.example.cachecleaner.core.utils.FileSizeFormatter
+import com.example.cachecleaner.domain.model.AccessMode
 
 @Composable
 fun ConfirmCleanDialog(
     selectedCount: Int,
     estimatedCacheBytes: Long,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    accessMode: AccessMode = AccessMode.STANDARD
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Clear selected cache?")
+            Text(text = "Clear cache?")
         },
         text = {
-            Text(
-                text = "You are about to clear cache for $selectedCount application(s) " +
-                    "(~${FileSizeFormatter.format(estimatedCacheBytes)}).\n\n" +
-                    "Your personal data, accounts, login sessions, and database files will NOT be affected."
-            )
+            val formattedSize = FileSizeFormatter.format(estimatedCacheBytes)
+            val description = if (accessMode == AccessMode.STANDARD) {
+                "Open system settings for $selectedCount apps (~$formattedSize) to clear cache manually.\n\n" +
+                "Personal data, accounts, and databases will not be affected."
+            } else {
+                "Clear cache for $selectedCount apps (~$formattedSize)?\n\n" +
+                "Personal data, accounts, and databases will not be affected."
+            }
+            Text(text = description)
         },
         confirmButton = {
             Button(
@@ -36,7 +42,7 @@ fun ConfirmCleanDialog(
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 )
             ) {
-                Text("Clear Cache")
+                Text(if (accessMode == AccessMode.STANDARD) "Open Settings" else "Clear Cache")
             }
         },
         dismissButton = {

@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 
 data class AppsUiState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val isCleaning: Boolean = false,
     val cleaningProgress: Pair<Int, Int>? = null,
     val currentCleaningPackage: String? = null,
@@ -28,7 +29,7 @@ data class AppsUiState(
     val searchQuery: String = "",
     val filter: AppFilter = AppFilter.ALL,
     val sortOption: SortOption = SortOption.CACHE_DESC,
-    val accessMode: AccessMode = AccessMode.SHIZUKU,
+    val accessMode: AccessMode = AccessMode.STANDARD,
     val cleanResults: List<CleaningResult>? = null,
     val errorMessage: String? = null
 ) {
@@ -68,9 +69,15 @@ class AppsViewModel(
         }
     }
 
-    fun refreshApps() {
+    fun refreshApps(isPullToRefresh: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            if (isPullToRefresh) {
+                _uiState.value = _uiState.value.copy(isRefreshing = true)
+            } else if (_uiState.value.apps.isEmpty()) {
+                _uiState.value = _uiState.value.copy(isLoading = true)
+            } else {
+                _uiState.value = _uiState.value.copy(isRefreshing = true)
+            }
 
             val showSystemApps = userPreferencesRepository.showSystemAppsFlow.first()
             val apps = appRepository.getInstalledApps(
@@ -85,9 +92,20 @@ class AppsViewModel(
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
+                isRefreshing = false,
                 apps = apps,
                 selectedPackages = currentSelected
             )
+        }
+    }
+
+    fun onAppResumed() {
+        viewModelScope.launch {
+            val mode = userPreferencesRepository.accessModeFlow.first()
+            _uiState.value = _uiState.value.copy(accessMode = mode)
+            if (_uiState.value.apps.isEmpty()) {
+                refreshApps()
+            }
         }
     }
 

@@ -57,18 +57,18 @@ fun FilterSortSection(
             FilterChip(
                 selected = currentFilter == AppFilter.USER,
                 onClick = { onFilterChange(AppFilter.USER) },
-                label = { Text("User Apps") }
+                label = { Text("User") }
             )
             FilterChip(
                 selected = currentFilter == AppFilter.SYSTEM,
                 onClick = { onFilterChange(AppFilter.SYSTEM) },
-                label = { Text("System Apps") }
+                label = { Text("System") }
             )
         }
 
         Box {
             IconButton(onClick = { sortMenuExpanded = true }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort Options")
+                Icon(imageVector = Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort options")
             }
 
             DropdownMenu(
@@ -76,28 +76,28 @@ fun FilterSortSection(
                 onDismissRequest = { sortMenuExpanded = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Cache: Largest First") },
+                    text = { Text("Largest cache") },
                     onClick = {
                         onSortChange(SortOption.CACHE_DESC)
                         sortMenuExpanded = false
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Cache: Smallest First") },
+                    text = { Text("Smallest cache") },
                     onClick = {
                         onSortChange(SortOption.CACHE_ASC)
                         sortMenuExpanded = false
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Name: A–Z") },
+                    text = { Text("Name A–Z") },
                     onClick = {
                         onSortChange(SortOption.NAME_ASC)
                         sortMenuExpanded = false
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Name: Z–A") },
+                    text = { Text("Name Z–A") },
                     onClick = {
                         onSortChange(SortOption.NAME_DESC)
                         sortMenuExpanded = false

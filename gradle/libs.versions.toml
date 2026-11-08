@@ -15,10 +15,12 @@ nav3Core = "1.0.1"
 lifecycleViewmodelNav3 = "2.10.0"
 shizuku = "13.1.5"
 datastore = "1.1.2"
+hiddenApiBypass = "6.2"
 
 [libraries]
 shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
 shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
+hiddenapibypass = { module = "org.lsposed.hiddenapibypass:hiddenapibypass", version.ref = "hiddenApiBypass" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxCore" }

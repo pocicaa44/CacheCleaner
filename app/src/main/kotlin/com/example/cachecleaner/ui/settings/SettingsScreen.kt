@@ -1,5 +1,6 @@
 package com.example.cachecleaner.ui.settings
 
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -53,7 +54,7 @@ fun SettingsScreen(
                 title = "Settings",
                 actions = {
                     IconButton(onClick = { viewModel.checkEnvironmentStatus() }) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh Status")
+                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh status")
                     }
                 }
             )
@@ -71,10 +72,10 @@ fun SettingsScreen(
             // Appearance Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.padding(horizontal = 4.dp))
@@ -85,20 +86,56 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Dynamic Color",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "Match system colors and wallpaper",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = uiState.dynamicColor,
+                                onCheckedChange = { viewModel.setDynamicColor(it) }
+                            )
+                        }
+
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                    }
+
+                    Text(
+                        text = "Theme Preference",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     ThemeOptionRow(
-                        title = "System Default",
+                        title = "System",
                         selected = uiState.theme == AppTheme.SYSTEM,
                         onClick = { viewModel.setTheme(AppTheme.SYSTEM) }
                     )
                     ThemeOptionRow(
-                        title = "Light Mode",
+                        title = "Light",
                         selected = uiState.theme == AppTheme.LIGHT,
                         onClick = { viewModel.setTheme(AppTheme.LIGHT) }
                     )
                     ThemeOptionRow(
-                        title = "Dark Mode",
+                        title = "Dark",
                         selected = uiState.theme == AppTheme.DARK,
                         onClick = { viewModel.setTheme(AppTheme.DARK) }
                     )
@@ -108,10 +145,10 @@ fun SettingsScreen(
             // Access Management Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.Security, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.padding(horizontal = 4.dp))
@@ -122,10 +159,10 @@ fun SettingsScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "Preferred Cleaning Engine",
+                        text = "Cleaning Method",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -134,58 +171,59 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     ThemeOptionRow(
-                        title = "Shizuku Mode (Automated ADB)",
+                        title = "Standard",
+                        selected = uiState.accessMode == AccessMode.STANDARD,
+                        onClick = { viewModel.setAccessMode(AccessMode.STANDARD) }
+                    )
+                    ThemeOptionRow(
+                        title = "Shizuku",
                         selected = uiState.accessMode == AccessMode.SHIZUKU,
                         onClick = { viewModel.setAccessMode(AccessMode.SHIZUKU) }
                     )
                     ThemeOptionRow(
-                        title = "Root Mode (Superuser su)",
+                        title = "Root",
                         selected = uiState.accessMode == AccessMode.ROOT,
                         onClick = { viewModel.setAccessMode(AccessMode.ROOT) }
-                    )
-                    ThemeOptionRow(
-                        title = "Standard Mode (Settings Redirect)",
-                        selected = uiState.accessMode == AccessMode.STANDARD,
-                        onClick = { viewModel.setAccessMode(AccessMode.STANDARD) }
                     )
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 
-                    StatusItemRow(title = "Shizuku Service Status", status = uiState.shizukuStatus)
+                    StatusItemRow(title = "Shizuku", status = uiState.shizukuStatus)
 
                     if (uiState.shizukuStatus == AccessStatus.PERMISSION_REQUIRED) {
                         Spacer(modifier = Modifier.height(8.dp))
                         FilledTonalButton(
                             onClick = { viewModel.requestShizukuPermission() },
-                            modifier = Modifier.align(Alignment.End)
+                            modifier = Modifier.align(Alignment.End),
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Grant Shizuku Permission")
+                            Text("Grant Permission")
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-                    StatusItemRow(title = "Root Access Status", status = uiState.rootStatus)
+                    StatusItemRow(title = "Root", status = uiState.rootStatus)
                 }
             }
 
             // General Preferences
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                         Text(
-                            text = "Application Scanning",
+                            text = "Applications",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -193,9 +231,9 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = "Include System Applications", style = MaterialTheme.typography.bodyLarge)
+                            Text(text = "System apps", style = MaterialTheme.typography.bodyLarge)
                             Text(
-                                text = "Scan and show preinstalled OEM & system packages",
+                                text = "Include preinstalled and system apps",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -211,24 +249,24 @@ fun SettingsScreen(
             // About Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "About Cache Cleaner",
+                        text = "About",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Version 1.0 (Native Android + Jetpack Compose)",
+                        text = "Version 1.0",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "A lightweight, respectful utility built strictly for inspecting storage and clearing application cache safely without advertisements or background bloat.",
+                        text = "Inspect and clear application cache safely.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

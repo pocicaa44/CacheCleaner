@@ -1,12 +1,14 @@
 package com.example.cachecleaner.data.cleaner
 
 import android.content.Context
+import com.example.cachecleaner.core.access.ShizukuManager
 import com.example.cachecleaner.data.storage.StorageStatsRepository
 import com.example.cachecleaner.domain.model.AccessMode
 import com.example.cachecleaner.domain.model.AccessStatus
 import com.example.cachecleaner.domain.model.CleaningResult
 import com.example.cachecleaner.domain.model.CleaningStatus
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 class CleanerRepository(
@@ -40,6 +42,8 @@ class CleanerRepository(
         val result = engine.clearCache(packageName)
 
         if (result.status == CleaningStatus.SUCCESS) {
+            // Give storage/filesystem a short interval to reflect updated usage
+            delay(200)
             val afterStats = storageStatsRepository.getStorageInfoForPackage(packageName)
             val afterCache = afterStats?.cacheBytes ?: 0L
             val freed = maxOf(0L, beforeCache - afterCache)
@@ -62,6 +66,11 @@ class CleanerRepository(
             onProgress(index + 1, total, packageName)
             val result = cleanAndVerify(engine, packageName)
             results.add(result)
+        }
+
+        // If using Shizuku, perform final global cache trim to free system-wide remnants
+        if (engine is ShizukuCleaner && ShizukuManager.accessStatus.value == AccessStatus.AVAILABLE) {
+            engine.trimAllCaches()
         }
 
         results

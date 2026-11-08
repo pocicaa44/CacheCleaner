@@ -27,18 +27,18 @@ fun CleanResultDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "Cleaning Completed")
+            Text(text = "Cleaning complete")
         },
         text = {
             Column {
                 Text(
-                    text = "• $successCount application(s) cleaned successfully",
+                    text = "• $successCount apps cleaned",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
                 if (failedCount > 0) {
                     Text(
-                        text = "• $failedCount application(s) failed or denied",
+                        text = "• $failedCount failed",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -47,7 +47,7 @@ fun CleanResultDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Total space freed: ${FileSizeFormatter.format(totalFreedBytes)}",
+                    text = "Space freed: ${FileSizeFormatter.format(totalFreedBytes)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
