@@ -1,0 +1,100 @@
+# ====================================================================
+# Android & Kotlin .gitignore
+# Designed for safe, clean uploads to GitHub
+# ====================================================================
+
+# --------------------------------------------------
+# Built Application Packages & Binaries
+# --------------------------------------------------
+*.apk
+*.ap_
+*.aab
+*.aar
+*.dex
+*.class
+
+# --------------------------------------------------
+# Build Outputs & Temporary Artifacts
+# --------------------------------------------------
+.gradle/
+build/
+**/build/
+bin/
+gen/
+out/
+captures/
+.externalNativeBuild/
+.cxx/
+lint/
+reports/
+
+# --------------------------------------------------
+# Kotlin Compiler Cache
+# --------------------------------------------------
+.kotlin/
+*.kotlin_module
+
+# --------------------------------------------------
+# Local SDK & Machine-Specific Properties (SENSITIVE)
+# --------------------------------------------------
+local.properties
+/local.properties
+*.local.properties
+
+# --------------------------------------------------
+# Keystores, Signing Keys & Certificates (SENSITIVE)
+# --------------------------------------------------
+*.keystore
+*.jks
+*.p12
+*.pem
+*.key
+*.bks
+signing.properties
+keystore.properties
+secrets.properties
+*secret*.properties
+
+# --------------------------------------------------
+# API Keys & Cloud Service Credentials (SENSITIVE)
+# --------------------------------------------------
+google-services.json
+play-services-credentials.json
+api-keys.json
+.env
+.env.*
+
+# --------------------------------------------------
+# IntelliJ IDEA / Android Studio
+# --------------------------------------------------
+*.iml
+.idea/
+.navigation/
+
+# --------------------------------------------------
+# Visual Studio Code & Other Editors
+# --------------------------------------------------
+.vscode/
+.fleet/
+*.sublime-project
+*.sublime-workspace
+
+# --------------------------------------------------
+# Profiler, Memory Dumps & Diagnostics
+# --------------------------------------------------
+*.hprof
+*.log
+
+# --------------------------------------------------
+# OS-Specific Files
+# --------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+.directory
+*~
+*.swp
